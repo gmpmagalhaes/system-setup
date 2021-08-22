@@ -1,4 +1,4 @@
-#! bin/bash
+#!/bin/bash
 
 update_os() {
     echo -e 'Updating the system...'
@@ -46,24 +46,23 @@ setup_dotfiles() {
         echo ".cfg" >> ~/.gitignore ;
     fi
 
-    git clone --bare https://github.com/gmpmagalhaes/dotfiles $HOME/.cfg
-    function dotfiles {
+    git clone --bare https://github.com/gmpmagalhaes/dotfiles.git $HOME/.cfg
+    function config {
         /usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME $@
     }
     mkdir -p .config-backup
-    dotfiles checkout
+    config checkout
     if [ $? = 0 ]; then
     echo "Checked out config.";
     else
         echo "Backing up pre-existing dot files.";
-        dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
+        config checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
     fi;
-    dotfiles checkout
-    dotfiles config status.showUntrackedFiles no
+    config checkout
+    config config status.showUntrackedFiles no
 
-    if [["$WSLENV"]]
-    then
-        git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/libexec/git-core/git-credential-manager-core.exe"
+    if [[ "$WSLENV" ]]; then
+        git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/libexec/git-core/git-credential-manager-core.exe" ;
     fi
 }
 
@@ -85,7 +84,13 @@ install_tools() {
     vim \
     neovim \
     tmux \
+    silversearcher-ag \
+    unzip \
     -y
+
+    curl -fsSL https://fnm.vercel.app/install | bash
+
+    fnm install --lts
 }
 
 echo -e 'Starting linux machine setup...'
@@ -93,5 +98,6 @@ update_os
 install_docker
 install_tools
 setup_shell
+setup_dotfiles
 
 echo -e 'Finishing setting up the linux environment...'
